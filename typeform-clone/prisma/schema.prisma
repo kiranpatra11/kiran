@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum FieldType {
+  SHORT_TEXT
+  LONG_TEXT
+  EMAIL
+  NUMBER
+  MULTIPLE_CHOICE
+  DROPDOWN
+  DATE
+  BOOLEAN
+}
+
+model Form {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  fields      Field[]
+  submissions Submission[]
+}
+
+model Field {
+  id          String    @id @default(cuid())
+  form        Form      @relation(fields: [formId], references: [id])
+  formId      String
+  label       String
+  type        FieldType
+  isRequired  Boolean   @default(false)
+  orderIndex  Int
+  options     Json      // store options as JSON array for MULTIPLE_CHOICE or DROPDOWN
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  answers     Answer[]
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  form      Form     @relation(fields: [formId], references: [id])
+  formId    String
+  createdAt DateTime @default(now())
+  answers   Answer[]
+}
+
+model Answer {
+  id           String      @id @default(cuid())
+  submission   Submission  @relation(fields: [submissionId], references: [id])
+  submissionId String
+  field        Field       @relation(fields: [fieldId], references: [id])
+  fieldId      String
+  value        Json
+}
